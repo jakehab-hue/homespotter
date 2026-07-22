@@ -1,0 +1,26 @@
+name: HomeSpotterAR
+options:
+  bundleIdPrefix: com.jakehab
+  deploymentTarget:
+    iOS: "16.0"
+targets:
+  HomeSpotterAR:
+    type: application
+    platform: iOS
+    sources: [Sources]
+    info:
+      path: Sources/Info.plist
+      properties:
+        UILaunchScreen: {}
+        CFBundleDisplayName: HomeSpotter
+        NSCameraUsageDescription: HomeSpotter shows the houses around you through your camera.
+        NSLocationWhenInUseUsageDescription: HomeSpotter uses your location to find the homes around you.
+        UIRequiredDeviceCapabilities: [arkit, gps]
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIStatusBarHidden: true
+    settings:
+      base:
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "5.9"
+        GENERATE_INFOPLIST_FILE: NO
