@@ -28,45 +28,51 @@
 
   /* ---- camera + HUD ---- */
   #cam { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  #hud { position: fixed; inset: 0; display: none; }
+  #hud { position: fixed; inset: 0; display: none; overflow: hidden; }
 
   #topbar {
-    position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between;
+    position: absolute; top: 0; left: 0; right: 0; z-index: 5;
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
     padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 10px;
     background: linear-gradient(#000a, transparent); font-size: 13px; font-variant-numeric: tabular-nums;
   }
-  .pill { background: #000a; border-radius: 14px; padding: 5px 12px; backdrop-filter: blur(6px); }
+  .pill { background: #000a; border-radius: 14px; padding: 5px 12px; backdrop-filter: blur(6px); white-space: nowrap; }
   .pill .warn { color: #f0a83a; }
+  #gearBtn { background: #000a; border: none; color: #fff; font-size: 17px;
+    border-radius: 14px; padding: 4px 11px; backdrop-filter: blur(6px); }
 
-  #reticle {
-    position: absolute; left: 50%; top: 45%; width: 64px; height: 64px;
-    transform: translate(-50%, -50%); pointer-events: none;
+  /* ---- AR labels ---- */
+  .tag {
+    position: absolute; z-index: 3; transform: translate(-50%, -100%);
+    display: none; flex-direction: column; align-items: center; gap: 0;
+    pointer-events: auto; text-align: center;
   }
-  #reticle::before, #reticle::after {
-    content: ""; position: absolute; background: #ffffffcc;
+  .tag .bubble {
+    background: #101820e6; border: 1px solid #3a4a5a; border-radius: 14px;
+    padding: 7px 12px; backdrop-filter: blur(6px); box-shadow: 0 2px 12px #0008;
+    line-height: 1.25; max-width: 190px; overflow: hidden;
   }
-  #reticle::before { left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-50%);
-    clip-path: polygon(0 0, 100% 0, 100% 30%, 0 30%, 0 70%, 100% 70%, 100% 100%, 0 100%); }
-  #reticle::after { top: 50%; left: 0; right: 0; height: 2px; transform: translateY(-50%);
-    clip-path: polygon(0 0, 30% 0, 30% 100%, 0 100%, 70% 0, 100% 0, 100% 100%, 70% 100%); }
+  .tag .price { font-size: 16px; font-weight: 800; color: #7ee787; white-space: nowrap; }
+  .tag .line1 { font-size: 13px; font-weight: 600; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+  .tag .line2 { font-size: 11px; color: #9fb3c8; white-space: nowrap; }
+  .tag .stem { width: 2px; height: 14px; background: #ffffff99; }
+  .tag .dot { width: 7px; height: 7px; border-radius: 50%; background: #fff; box-shadow: 0 0 6px #000; }
+  .tag.near .price { font-size: 18px; }
+  .tag.far .bubble { padding: 5px 9px; }
+  .tag.far .price { font-size: 13px; }
+  .tag.far .line1 { font-size: 11px; max-width: 130px; }
+  .tag.far .line2 { display: none; }
 
-  #snapBtn {
-    position: absolute; left: 50%; transform: translateX(-50%);
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
-    width: 78px; height: 78px; border-radius: 50%; border: 5px solid #fff;
-    background: #ffffff33; backdrop-filter: blur(4px);
-  }
-  #snapBtn:active { background: #ffffff88; }
-  #snapBtn:disabled { opacity: 0.4; }
-
-  /* ---- result card ---- */
+  /* ---- detail card ---- */
   #card {
-    position: absolute; left: 12px; right: 12px;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 122px);
-    background: #101820ee; border: 1px solid #2a3a4a; border-radius: 18px;
+    position: absolute; left: 12px; right: 12px; z-index: 10;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+    background: #101820f2; border: 1px solid #2a3a4a; border-radius: 18px;
     padding: 16px; backdrop-filter: blur(10px); display: none;
   }
-  #card .addr { font-size: 19px; font-weight: 700; line-height: 1.3; }
+  #card .price { font-size: 24px; font-weight: 800; color: #7ee787; }
+  #card .addr { font-size: 18px; font-weight: 700; line-height: 1.3; margin-top: 2px; }
   #card .meta { color: #9fb3c8; font-size: 13px; margin-top: 5px; }
   #card .links { display: flex; gap: 8px; margin-top: 13px; flex-wrap: wrap; }
   #card .links a {
@@ -77,11 +83,10 @@
   #card .links a.redfin { background: #c82021; }
   #card .links a.google { background: #3a4a5a; }
   #card .close { position: absolute; top: 8px; right: 12px; color: #9fb3c8; font-size: 22px; padding: 4px; }
-  #card.scanning .addr { color: #9fb3c8; font-weight: 400; }
 
   #toast {
-    position: absolute; left: 50%; transform: translateX(-50%);
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 122px);
+    position: absolute; left: 50%; transform: translateX(-50%); z-index: 20;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
     background: #000c; padding: 10px 18px; border-radius: 20px; font-size: 14px;
     max-width: 85%; text-align: center; display: none;
   }
@@ -91,8 +96,8 @@
 
 <div id="start">
   <h1>🏠 HomeSpotter</h1>
-  <p>Point your camera at a house and tap the shutter — HomeSpotter uses your GPS position and compass heading to figure out which building you're aiming at.</p>
-  <p style="font-size:13px">You'll be asked for <b>camera</b>, <b>motion &amp; orientation</b>, and <b>location</b> access. Works best outdoors with a clear view.</p>
+  <p><b>Live mode:</b> hold your phone up as you walk or drive a street — every house in view gets a floating tag. Tap a tag for the listing links.</p>
+  <p style="font-size:13px">You'll be asked for <b>camera</b>, <b>motion &amp; orientation</b>, and <b>location</b> access. Works best outdoors.</p>
   <button id="startBtn">Start</button>
   <div id="startErr"></div>
 </div>
@@ -103,35 +108,41 @@
   <div id="topbar">
     <span class="pill" id="headingPill">🧭 --°</span>
     <span class="pill" id="gpsPill">📍 waiting for GPS…</span>
+    <button id="gearBtn" aria-label="Settings">⚙︎</button>
   </div>
-  <div id="reticle"></div>
+  <div id="tags"></div>
   <div id="card">
     <div class="close" id="cardClose">✕</div>
+    <div class="price" id="cardPrice" style="display:none"></div>
     <div class="addr" id="cardAddr"></div>
     <div class="meta" id="cardMeta"></div>
     <div class="links" id="cardLinks"></div>
   </div>
   <div id="toast"></div>
-  <button id="snapBtn" aria-label="Identify house"></button>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
-const state = {
-  pos: null,          // latest GeolocationPosition
-  heading: null,      // degrees clockwise from true-ish north
-  headingSrc: null,   // 'webkit' | 'absolute' | 'relative'
-  buildings: null,    // cached Overpass result
-  buildingsAt: null,  // {lat, lon} where cache was fetched
-  busy: false,
-};
+const FOV_DEG = 52;          // assumed horizontal camera field of view (portrait)
+const MAX_DIST = 130;        // meters — ignore buildings beyond this
+const MIN_DIST = 5;          // meters — ignore the building you're standing at
+const MAX_TAGS = 7;
+const MIN_TAG_SEP_DEG = 7;   // suppress overlapping labels
 
-/* ---------------- startup & permissions ---------------- */
+const state = {
+  pos: null, heading: null, headingSmooth: null, headingSrc: null,
+  buildings: [],            // enriched Overpass ways
+  fetchedAt: null,          // {lat, lon} of last Overpass fetch
+  fetching: false,
+  selected: null,           // building shown in the detail card
+};
+const tagEls = new Map();   // building id -> DOM element
+
+/* ================= startup & sensors ================= */
 
 $('startBtn').addEventListener('click', async () => {
   $('startErr').textContent = '';
   try {
-    // iOS requires an explicit permission request from a user gesture
     if (typeof DeviceOrientationEvent !== 'undefined' &&
         typeof DeviceOrientationEvent.requestPermission === 'function') {
       const perm = await DeviceOrientationEvent.requestPermission();
@@ -142,49 +153,59 @@ $('startBtn').addEventListener('click', async () => {
     });
     $('cam').srcObject = stream;
 
-    navigator.geolocation.watchPosition(
-      p => { state.pos = p; renderTopbar(); },
+    navigator.geolocation.watchPosition(onPosition,
       e => toast('GPS error: ' + e.message, 4000),
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
-    );
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 20000 });
 
     window.addEventListener('deviceorientationabsolute', onOrientAbsolute);
     window.addEventListener('deviceorientation', onOrient);
 
     $('start').style.display = 'none';
     $('hud').style.display = 'block';
+    requestAnimationFrame(frame);
+    setInterval(resolverTick, 1400);   // background address/price resolution
   } catch (e) {
     $('startErr').textContent = e.message +
       (location.protocol === 'http:' ? ' (camera & compass need HTTPS)' : '');
   }
 });
 
+function onPosition(p) {
+  state.pos = p;
+  renderTopbar();
+  const { latitude: lat, longitude: lon } = p.coords;
+  if (!state.fetchedAt || haversine(lat, lon, state.fetchedAt.lat, state.fetchedAt.lon) > 100) {
+    fetchBuildings(lat, lon);
+  }
+}
+
 function onOrient(e) {
   if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) {
-    state.heading = e.webkitCompassHeading;           // iOS: already true heading
-    state.headingSrc = 'webkit';
+    setHeading(e.webkitCompassHeading, 'webkit');       // iOS: true heading
   } else if (state.headingSrc !== 'webkit' && state.headingSrc !== 'absolute' &&
              e.alpha != null && e.absolute === true) {
-    state.heading = (360 - e.alpha) % 360;
-    state.headingSrc = 'relative';
+    setHeading((360 - e.alpha) % 360, 'relative');
   }
-  renderTopbar();
 }
 function onOrientAbsolute(e) {
   if (state.headingSrc === 'webkit' || e.alpha == null) return;
-  state.heading = (360 - e.alpha) % 360;              // Android absolute orientation
-  state.headingSrc = 'absolute';
+  setHeading((360 - e.alpha) % 360, 'absolute');        // Android
+}
+function setHeading(h, src) {
+  state.heading = h; state.headingSrc = src;
+  // exponential smoothing on a circular value to stop label jitter
+  if (state.headingSmooth == null) state.headingSmooth = h;
+  else state.headingSmooth = (state.headingSmooth + 0.25 * angDiff(h, state.headingSmooth) + 360) % 360;
   renderTopbar();
 }
 
 function renderTopbar() {
-  const h = state.heading;
+  const h = state.headingSmooth;
   $('headingPill').innerHTML = h == null
     ? '🧭 <span class="warn">no compass</span>'
     : `🧭 ${h.toFixed(0)}° ${cardinal(h)}`;
-  const p = state.pos;
-  if (p) {
-    const acc = p.coords.accuracy;
+  if (state.pos) {
+    const acc = state.pos.coords.accuracy;
     $('gpsPill').innerHTML = acc > 25
       ? `📍 <span class="warn">±${acc.toFixed(0)}m</span>`
       : `📍 ±${acc.toFixed(0)}m`;
@@ -192,105 +213,243 @@ function renderTopbar() {
 }
 const cardinal = h => 'N NE E SE S SW W NW'.split(' ')[Math.round(h / 45) % 8];
 
-/* ---------------- identify: ray-cast against building footprints ---------------- */
+/* ================= building data ================= */
 
-$('snapBtn').addEventListener('click', identify);
-$('cardClose').addEventListener('click', () => $('card').style.display = 'none');
+const SKIP_TYPES = new Set(['garage', 'garages', 'shed', 'carport', 'roof', 'greenhouse']);
 
-async function identify() {
-  if (state.busy) return;
-  if (!state.pos) return toast('Waiting for a GPS fix — step outside with a clear sky view.', 3500);
-  if (state.heading == null) return toast('No compass reading — wave the phone in a figure-8 to calibrate.', 3500);
-
-  state.busy = true;
-  $('snapBtn').disabled = true;
-  showCard('Scanning…', '', null, true);
-
+async function fetchBuildings(lat, lon) {
+  if (state.fetching) return;
+  state.fetching = true;
   try {
-    const { latitude: lat, longitude: lon, accuracy } = state.pos.coords;
-    const buildings = await getBuildings(lat, lon);
-    const hit = castRay(lat, lon, state.heading, buildings);
-
-    if (hit) {
-      const addr = await resolveAddress(hit, lat, lon);
-      showCard(
-        addr.display,
-        `${hit.dist.toFixed(0)}m away · heading ${state.heading.toFixed(0)}° · GPS ±${accuracy.toFixed(0)}m` +
-          (addr.fromTags ? ' · OSM address' : ' · nearest-address estimate'),
-        addr.query
-      );
-    } else {
-      // fallback: reverse-geocode a point ~40m along the bearing
-      const pt = project(lat, lon, state.heading, 40);
-      const rev = await reverseGeocode(pt.lat, pt.lon);
-      if (rev) {
-        showCard(rev.display, `No building footprint on that bearing — closest known address · GPS ±${accuracy.toFixed(0)}m`, rev.query);
-      } else {
-        $('card').style.display = 'none';
-        toast('No building found on that bearing. Aim at the center of the house and try again.', 4000);
-      }
-    }
+    const q = `[out:json][timeout:15];way["building"](around:220,${lat},${lon});out geom tags;`;
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'data=' + encodeURIComponent(q),
+    });
+    if (!res.ok) throw new Error('building data service returned ' + res.status);
+    const data = await res.json();
+    state.buildings = data.elements
+      .filter(el => el.geometry && el.geometry.length >= 3)
+      .filter(el => !SKIP_TYPES.has((el.tags && el.tags.building) || ''))
+      .map(el => {
+        const c = centroid(el.geometry);
+        const t = el.tags || {};
+        const b = { id: el.id, lat: c.lat, lon: c.lon, tags: t,
+                    addr: null, addrShort: null, price: cachedPrice(null), priceState: 'none' };
+        if (t['addr:housenumber'] && t['addr:street']) {
+          b.addrShort = `${t['addr:housenumber']} ${t['addr:street']}`;
+          b.addr = b.addrShort + (t['addr:city'] ? `, ${t['addr:city']}` : '');
+        } else {
+          const cached = localStorage.getItem('hs_addr_' + el.id);
+          if (cached) { const j = JSON.parse(cached); b.addrShort = j.s; b.addr = j.f; }
+        }
+        if (b.addr) {
+          const p = cachedPrice(b.addr);
+          if (p) { b.price = p; b.priceState = 'done'; }
+        }
+        return b;
+      });
+    state.fetchedAt = { lat, lon };
   } catch (e) {
-    $('card').style.display = 'none';
-    toast('Lookup failed: ' + e.message, 4000);
+    toast('Couldn’t load building data: ' + e.message, 4000);
   } finally {
-    state.busy = false;
-    $('snapBtn').disabled = false;
+    state.fetching = false;
   }
 }
 
-// Fetch building footprints near the user from Overpass (cached until we move ~40m)
-async function getBuildings(lat, lon) {
-  if (state.buildings && state.buildingsAt &&
-      haversine(lat, lon, state.buildingsAt.lat, state.buildingsAt.lon) < 40) {
-    return state.buildings;
+/* ================= AR projection loop ================= */
+
+function frame() {
+  requestAnimationFrame(frame);
+  if (!state.pos || state.headingSmooth == null || !state.buildings.length) return;
+
+  const { latitude: lat, longitude: lon } = state.pos.coords;
+  const W = innerWidth, H = innerHeight;
+  const mPerDegLat = 111320, mPerDegLon = 111320 * Math.cos(lat * Math.PI / 180);
+
+  // compute bearing/distance for each building, keep those inside the view cone
+  const visible = [];
+  for (const b of state.buildings) {
+    const x = (b.lon - lon) * mPerDegLon, y = (b.lat - lat) * mPerDegLat;
+    const dist = Math.hypot(x, y);
+    if (dist < MIN_DIST || dist > MAX_DIST) continue;
+    const bearing = (Math.atan2(x, y) * 180 / Math.PI + 360) % 360;
+    const off = angDiff(bearing, state.headingSmooth);
+    if (Math.abs(off) > FOV_DEG / 2 + 4) continue;
+    visible.push({ b, dist, off });
   }
-  const q = `[out:json][timeout:12];way["building"](around:160,${lat},${lon});out geom tags;`;
-  const res = await fetch('https://overpass-api.de/api/interpreter', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'data=' + encodeURIComponent(q),
-  });
-  if (!res.ok) throw new Error('building data service returned ' + res.status);
-  const data = await res.json();
-  state.buildings = data.elements.filter(el => el.geometry && el.geometry.length >= 3);
-  state.buildingsAt = { lat, lon };
-  return state.buildings;
+
+  // nearest first; greedily keep labels that don't crowd an already-kept one
+  visible.sort((a, c) => a.dist - c.dist);
+  const kept = [];
+  for (const v of visible) {
+    if (kept.length >= MAX_TAGS) break;
+    if (kept.every(k => Math.abs(angDiff(v.off + 0, k.off + 0)) >= MIN_TAG_SEP_DEG)) kept.push(v);
+  }
+
+  const keptIds = new Set(kept.map(v => v.b.id));
+  for (const [id, el] of tagEls) if (!keptIds.has(id)) el.style.display = 'none';
+
+  for (const v of kept) {
+    const el = tagEl(v.b);
+    const sx = W / 2 + (v.off / (FOV_DEG / 2)) * (W / 2);
+    // no pitch tracking: nearer houses sit lower on screen, farther ones higher
+    const sy = H * (0.62 - 0.32 * (v.dist / MAX_DIST));
+    el.style.display = 'flex';
+    el.style.left = sx + 'px';
+    el.style.top = sy + 'px';
+    el.classList.toggle('near', v.dist < 35);
+    el.classList.toggle('far', v.dist > 80);
+    updateTagContent(v.b, v.dist);
+  }
 }
 
-// First building polygon the compass ray hits, in a local flat (east, north) frame in meters
-function castRay(lat, lon, headingDeg, buildings) {
-  const mPerDegLat = 111320;
-  const mPerDegLon = 111320 * Math.cos(lat * Math.PI / 180);
-  const toXY = g => [(g.lon - lon) * mPerDegLon, (g.lat - lat) * mPerDegLat];
-  const th = headingDeg * Math.PI / 180;
-  const dx = Math.sin(th), dy = Math.cos(th);
+function tagEl(b) {
+  let el = tagEls.get(b.id);
+  if (el) return el;
+  el = document.createElement('div');
+  el.className = 'tag';
+  el.innerHTML = `<div class="bubble"><div class="price" style="display:none"></div>
+    <div class="line1"></div><div class="line2"></div></div>
+    <div class="stem"></div><div class="dot"></div>`;
+  el.addEventListener('click', ev => { ev.stopPropagation(); openCard(b); });
+  $('tags').appendChild(el);
+  tagEls.set(b.id, el);
+  return el;
+}
 
-  let best = null;
-  for (const b of buildings) {
-    const pts = b.geometry.map(toXY);
-    for (let i = 0; i < pts.length - 1; i++) {
-      const t = raySegment(dx, dy, pts[i], pts[i + 1]);
-      // ignore hits closer than 4m (the building you're standing in/next to)
-      if (t != null && t > 4 && t < 160 && (!best || t < best.dist)) {
-        best = { dist: t, building: b };
-      }
+function updateTagContent(b, dist) {
+  const el = tagEls.get(b.id);
+  const priceEl = el.querySelector('.price');
+  if (b.price) { priceEl.style.display = 'block'; priceEl.textContent = fmtPrice(b.price); }
+  else priceEl.style.display = 'none';
+  el.querySelector('.line1').textContent = b.addrShort || 'House';
+  el.querySelector('.line2').textContent = dist.toFixed(0) + 'm' +
+    (b.priceState === 'loading' ? ' · $…' : '');
+}
+
+/* ================= background resolvers (1 request per tick) ================= */
+
+function resolverTick() {
+  if (!state.pos || state.headingSmooth == null) return;
+  const { latitude: lat, longitude: lon } = state.pos.coords;
+  const mPerDegLat = 111320, mPerDegLon = 111320 * Math.cos(lat * Math.PI / 180);
+  const inView = state.buildings
+    .map(b => {
+      const x = (b.lon - lon) * mPerDegLon, y = (b.lat - lat) * mPerDegLat;
+      const dist = Math.hypot(x, y);
+      const bearing = (Math.atan2(x, y) * 180 / Math.PI + 360) % 360;
+      return { b, dist, off: Math.abs(angDiff(bearing, state.headingSmooth)) };
+    })
+    .filter(v => v.dist >= MIN_DIST && v.dist <= MAX_DIST && v.off <= FOV_DEG / 2 + 10)
+    .sort((a, c) => a.dist - c.dist);
+
+  // 1) resolve one missing address (Nominatim fair-use: ~1 req/sec)
+  const needAddr = inView.find(v => !v.b.addr && !v.b.addrPending);
+  if (needAddr) { resolveAddr(needAddr.b); return; }
+
+  // 2) resolve one missing price, if a RentCast key is configured
+  if (rentcastKey()) {
+    const needPrice = inView.find(v => v.b.addr && v.b.priceState === 'none');
+    if (needPrice) resolvePrice(needPrice.b);
+  }
+}
+
+async function resolveAddr(b) {
+  b.addrPending = true;
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&lat=${b.lat}&lon=${b.lon}`;
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if (!res.ok) return;
+    const d = await res.json();
+    const a = d.address || {};
+    const road = a.road || a.pedestrian || '';
+    const line = [a.house_number, road].filter(Boolean).join(' ');
+    if (!line) return;
+    const city = a.city || a.town || a.village || a.hamlet || '';
+    b.addrShort = line;
+    b.addr = [line, city, a.state, a.postcode].filter(Boolean).join(', ');
+    localStorage.setItem('hs_addr_' + b.id, JSON.stringify({ s: b.addrShort, f: b.addr }));
+    const p = cachedPrice(b.addr);
+    if (p) { b.price = p; b.priceState = 'done'; }
+    if (state.selected && state.selected.id === b.id) openCard(b);
+  } catch (_) { /* transient; retried next time buildings reload */ }
+}
+
+async function resolvePrice(b) {
+  b.priceState = 'loading';
+  try {
+    const url = 'https://api.rentcast.io/v1/avm/value?address=' + encodeURIComponent(b.addr);
+    const res = await fetch(url, { headers: { 'X-Api-Key': rentcastKey(), 'Accept': 'application/json' } });
+    if (res.status === 401 || res.status === 403) {
+      toast('RentCast key rejected — check it in ⚙︎ settings.', 4000);
+      b.priceState = 'error'; return;
     }
-  }
-  if (!best) return null;
-  const c = centroid(best.building.geometry);
-  return { ...best, lat: c.lat, lon: c.lon, tags: best.building.tags || {} };
+    if (res.status === 429) { b.priceState = 'none'; return; }  // rate-limited; retry later
+    if (!res.ok) { b.priceState = 'error'; return; }
+    const d = await res.json();
+    if (d && d.price) {
+      b.price = d.price;
+      b.priceState = 'done';
+      localStorage.setItem('hs_price_' + b.addr, JSON.stringify({ p: d.price, t: Date.now() }));
+      if (state.selected && state.selected.id === b.id) openCard(b);
+    } else b.priceState = 'error';
+  } catch (_) { b.priceState = 'error'; }
 }
 
-// Distance along ray (origin 0,0, direction dx,dy) to segment p1-p2, or null if no hit
-function raySegment(dx, dy, [x1, y1], [x2, y2]) {
-  const sx = x2 - x1, sy = y2 - y1;
-  const denom = dx * sy - dy * sx;
-  if (Math.abs(denom) < 1e-12) return null;
-  const t = (x1 * sy - y1 * sx) / denom;
-  const u = (x1 * dy - y1 * dx) / denom;
-  return (t >= 0 && u >= 0 && u <= 1) ? t : null;
+function cachedPrice(addr) {
+  if (!addr) return null;
+  const raw = localStorage.getItem('hs_price_' + addr);
+  if (!raw) return null;
+  try {
+    const j = JSON.parse(raw);
+    // value estimates go stale; keep for 30 days
+    return (Date.now() - j.t < 30 * 86400e3) ? j.p : null;
+  } catch (_) { return null; }
 }
+
+const fmtPrice = p => p >= 1e6 ? '$' + (p / 1e6).toFixed(2) + 'M' : '$' + Math.round(p / 1e3) + 'K';
+
+/* ================= detail card & settings ================= */
+
+function openCard(b) {
+  state.selected = b;
+  const card = $('card');
+  card.style.display = 'block';
+  $('cardPrice').style.display = b.price ? 'block' : 'none';
+  if (b.price) $('cardPrice').textContent = fmtPrice(b.price) + ' est.';
+  $('cardAddr').textContent = b.addr || 'Resolving address…';
+  const bits = [];
+  if (state.pos) bits.push(haversine(state.pos.coords.latitude, state.pos.coords.longitude, b.lat, b.lon).toFixed(0) + 'm away');
+  if (b.tags['building:levels']) bits.push(b.tags['building:levels'] + ' stories');
+  if (!b.price && !rentcastKey()) bits.push('add a RentCast key in ⚙︎ for price tags');
+  $('cardMeta').textContent = bits.join(' · ');
+  const links = $('cardLinks');
+  links.innerHTML = '';
+  const q = b.addr || `${b.lat.toFixed(6)},${b.lon.toFixed(6)}`;
+  const enc = encodeURIComponent(q);
+  links.innerHTML =
+    `<a class="zillow" target="_blank" rel="noopener" href="https://www.zillow.com/homes/${enc}_rb/">Zillow</a>` +
+    `<a class="redfin" target="_blank" rel="noopener" href="https://www.google.com/search?q=${enc}+site%3Aredfin.com">Redfin</a>` +
+    `<a class="google" target="_blank" rel="noopener" href="https://www.google.com/search?q=${enc}">Google</a>`;
+}
+$('cardClose').addEventListener('click', () => { $('card').style.display = 'none'; state.selected = null; });
+
+const rentcastKey = () => localStorage.getItem('hs_rentcast_key') || '';
+$('gearBtn').addEventListener('click', () => {
+  const cur = rentcastKey();
+  const k = prompt(
+    'Paste your RentCast API key to show price estimates above each house.\n' +
+    '(Free at rentcast.io → Sign up → API. Leave blank to remove.)', cur);
+  if (k === null) return;
+  if (k.trim()) { localStorage.setItem('hs_rentcast_key', k.trim()); toast('Key saved — prices will appear as houses resolve.'); }
+  else { localStorage.removeItem('hs_rentcast_key'); toast('Key removed.'); }
+});
+
+/* ================= small math/ui utils ================= */
+
+const angDiff = (a, b) => ((a - b + 540) % 360) - 180;
 
 function centroid(geom) {
   let la = 0, lo = 0;
@@ -298,67 +457,11 @@ function centroid(geom) {
   return { lat: la / geom.length, lon: lo / geom.length };
 }
 
-function project(lat, lon, headingDeg, meters) {
-  const th = headingDeg * Math.PI / 180;
-  return {
-    lat: lat + (meters * Math.cos(th)) / 111320,
-    lon: lon + (meters * Math.sin(th)) / (111320 * Math.cos(lat * Math.PI / 180)),
-  };
-}
-
 function haversine(la1, lo1, la2, lo2) {
   const R = 6371000, r = Math.PI / 180;
   const a = Math.sin((la2 - la1) * r / 2) ** 2 +
     Math.cos(la1 * r) * Math.cos(la2 * r) * Math.sin((lo2 - lo1) * r / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(a));
-}
-
-/* ---------------- addresses ---------------- */
-
-async function resolveAddress(hit, userLat, userLon) {
-  const t = hit.tags;
-  if (t['addr:housenumber'] && t['addr:street']) {
-    const line = `${t['addr:housenumber']} ${t['addr:street']}`;
-    const locality = t['addr:city'] ? `, ${t['addr:city']}` : '';
-    return { display: line + locality, query: line + locality, fromTags: true };
-  }
-  const rev = await reverseGeocode(hit.lat, hit.lon);
-  if (rev) return { ...rev, fromTags: false };
-  return { display: 'Unknown address', query: `${hit.lat.toFixed(6)},${hit.lon.toFixed(6)}`, fromTags: false };
-}
-
-async function reverseGeocode(lat, lon) {
-  const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&lat=${lat}&lon=${lon}`;
-  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-  if (!res.ok) return null;
-  const d = await res.json();
-  const a = d.address || {};
-  const road = a.road || a.pedestrian || '';
-  const line = [a.house_number, road].filter(Boolean).join(' ');
-  const city = a.city || a.town || a.village || a.hamlet || '';
-  if (!line && !city) return null;
-  const display = [line || road, city, a.state].filter(Boolean).join(', ');
-  const query = [line || road, city, a.state, a.postcode].filter(Boolean).join(', ');
-  return { display, query };
-}
-
-/* ---------------- UI helpers ---------------- */
-
-function showCard(addr, meta, query, scanning = false) {
-  const card = $('card');
-  card.className = scanning ? 'scanning' : '';
-  card.style.display = 'block';
-  $('cardAddr').textContent = addr;
-  $('cardMeta').textContent = meta;
-  const links = $('cardLinks');
-  links.innerHTML = '';
-  if (query) {
-    const enc = encodeURIComponent(query);
-    links.innerHTML =
-      `<a class="zillow" target="_blank" rel="noopener" href="https://www.zillow.com/homes/${enc}_rb/">Zillow</a>` +
-      `<a class="redfin" target="_blank" rel="noopener" href="https://www.google.com/search?q=${enc}+site%3Aredfin.com">Redfin</a>` +
-      `<a class="google" target="_blank" rel="noopener" href="https://www.google.com/search?q=${enc}">Google</a>`;
-  }
 }
 
 let toastTimer = null;
