@@ -143,8 +143,10 @@ const OVERPASS_MIRRORS = [
   'https://overpass.private.coffee/api/interpreter',
 ];
 
+const VFOV_DEG = 66;         // assumed vertical camera field of view (portrait)
+
 const state = {
-  pos: null, heading: null, headingSmooth: null, headingSrc: null,
+  pos: null, yaw: null, pitch: 0, headingSrc: null,
   buildings: [],            // building footprints + standalone address points
   fetchedAt: null,          // {lat, lon} of last successful fetch
   fetching: false,
@@ -195,28 +197,56 @@ function onPosition(p) {
   }
 }
 
+const DEG = Math.PI / 180;
+let yawOffset = 0;
+
 function onOrient(e) {
+  if (e.alpha == null || e.beta == null || e.gamma == null) return;
+  const [vx, vy, vz] = cameraDir(e.alpha, e.beta, e.gamma);
+  const yawRel = (Math.atan2(vx, vy) / DEG + 360) % 360;
+  state.pitch = Math.asin(Math.max(-1, Math.min(1, vz))) / DEG;
+
   if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) {
-    setHeading(e.webkitCompassHeading, 'webkit');       // iOS: true heading
-  } else if (state.headingSrc !== 'webkit' && state.headingSrc !== 'absolute' &&
-             e.alpha != null && e.absolute === true) {
-    setHeading((360 - e.alpha) % 360, 'relative');
+    // iOS: alpha is relative, so the gyro-fused yaw is smooth but unanchored.
+    // Snap the offset to the compass once, then steer it gently — fast motion
+    // comes from the gyro, absolute truth trickles in from the compass.
+    const err = angDiff(e.webkitCompassHeading, (yawRel + yawOffset + 360) % 360);
+    yawOffset += (state.yaw == null ? 1 : 0.04) * err;
+    state.headingSrc = 'webkit';
+  } else if (e.absolute === true) {
+    yawOffset = 0;
+    state.headingSrc = 'absolute';
+  } else if (state.headingSrc == null) {
+    state.headingSrc = 'relative';   // no absolute reference at all
   }
+  state.yaw = (yawRel + yawOffset + 360) % 360;
+  renderTopbar();
 }
 function onOrientAbsolute(e) {
   if (state.headingSrc === 'webkit' || e.alpha == null) return;
-  setHeading((360 - e.alpha) % 360, 'absolute');        // Android
-}
-function setHeading(h, src) {
-  state.heading = h; state.headingSrc = src;
-  // exponential smoothing on a circular value to stop label jitter
-  if (state.headingSmooth == null) state.headingSmooth = h;
-  else state.headingSmooth = (state.headingSmooth + 0.25 * angDiff(h, state.headingSmooth) + 360) % 360;
+  const [vx, vy, vz] = cameraDir(e.alpha, e.beta, e.gamma);  // Android: already absolute
+  state.pitch = Math.asin(Math.max(-1, Math.min(1, vz))) / DEG;
+  state.yaw = (Math.atan2(vx, vy) / DEG + 360) % 360;
+  state.headingSrc = 'absolute';
   renderTopbar();
 }
 
+// Direction the back camera faces, in earth frame (x=east, y=north, z=up),
+// from the W3C deviceorientation Z-X'-Y'' intrinsic rotation.
+function cameraDir(alpha, beta, gamma) {
+  const _x = beta * DEG, _y = gamma * DEG, _z = alpha * DEG;
+  const cX = Math.cos(_x / 2), cY = Math.cos(_y / 2), cZ = Math.cos(_z / 2);
+  const sX = Math.sin(_x / 2), sY = Math.sin(_y / 2), sZ = Math.sin(_z / 2);
+  const w = cX * cY * cZ - sX * sY * sZ;
+  const x = sX * cY * cZ - cX * sY * sZ;
+  const y = cX * sY * cZ + sX * cY * sZ;
+  const z = cX * cY * sZ + sX * sY * cZ;
+  // rotate the device's -Z axis (out the back of the phone) into earth frame
+  return [-2 * (x * z + w * y), -2 * (y * z - w * x), -(1 - 2 * x * x - 2 * y * y)];
+}
+
 function renderTopbar() {
-  const h = state.headingSmooth;
+  const h = state.yaw;
   $('headingPill').innerHTML = h == null
     ? '🧭 <span class="bad">no compass</span>'
     : `🧭 ${h.toFixed(0)}° ${cardinal(h)}`;
@@ -238,7 +268,7 @@ const cardinal = h => 'N NE E SE S SW W NW'.split(' ')[Math.round(h / 45) % 8];
 
 function renderDebug() {
   $('dbg').textContent =
-    `compass:${state.headingSrc || 'none'} · homes:${state.buildings.length} · data:${state.fetchStatus}`;
+    `compass:${state.headingSrc || 'none'} · pitch:${state.pitch.toFixed(0)}° · homes:${state.buildings.length} · data:${state.fetchStatus}`;
 }
 
 /* ================= building data ================= */
@@ -341,7 +371,7 @@ function applyOsmAddr(b, t) {
 
 function frame() {
   requestAnimationFrame(frame);
-  if (!state.pos || state.headingSmooth == null || !state.buildings.length) return;
+  if (!state.pos || state.yaw == null || !state.buildings.length) return;
 
   const { latitude: lat, longitude: lon } = state.pos.coords;
   const W = innerWidth, H = innerHeight;
@@ -354,7 +384,7 @@ function frame() {
     const dist = Math.hypot(x, y);
     if (dist < MIN_DIST || dist > MAX_DIST) continue;
     const bearing = (Math.atan2(x, y) * 180 / Math.PI + 360) % 360;
-    const off = angDiff(bearing, state.headingSmooth);
+    const off = angDiff(bearing, state.yaw);
     if (Math.abs(off) > FOV_DEG / 2 + 4) continue;
     visible.push({ b, dist, off });
   }
@@ -373,8 +403,11 @@ function frame() {
   for (const v of kept) {
     const el = tagEl(v.b);
     const sx = W / 2 + (v.off / (FOV_DEG / 2)) * (W / 2);
-    // no pitch tracking: nearer houses sit lower on screen, farther ones higher
-    const sy = H * (0.62 - 0.32 * (v.dist / MAX_DIST));
+    // anchor the tag ~3.5m above ground at the house and project against camera pitch,
+    // so tilting to the sky slides tags off the bottom instead of leaving them floating
+    const elev = Math.atan2(3.5, v.dist) / DEG;
+    const sy = H / 2 - ((elev - state.pitch) / VFOV_DEG) * H;
+    if (sy < -40 || sy > H + 60) { el.style.display = 'none'; continue; }
     el.style.display = 'flex';
     el.style.left = sx + 'px';
     el.style.top = sy + 'px';
@@ -419,7 +452,7 @@ $('gearBtn').addEventListener('click', ev => ev.stopPropagation(), true);
 
 async function identifyAtHeading() {
   if (!state.pos) return toast('Waiting for a GPS fix — step outside with a clear sky view.', 3500);
-  if (state.headingSmooth == null) return toast('No compass reading — wave the phone in a figure-8 to calibrate.', 3500);
+  if (state.yaw == null) return toast('No compass reading — wave the phone in a figure-8 to calibrate.', 3500);
   const { latitude: lat, longitude: lon } = state.pos.coords;
   const mPerDegLat = 111320, mPerDegLon = 111320 * Math.cos(lat * Math.PI / 180);
 
@@ -430,14 +463,14 @@ async function identifyAtHeading() {
     const dist = Math.hypot(x, y);
     if (dist < MIN_DIST || dist > 170) continue;
     const bearing = (Math.atan2(x, y) * 180 / Math.PI + 360) % 360;
-    const off = Math.abs(angDiff(bearing, state.headingSmooth));
+    const off = Math.abs(angDiff(bearing, state.yaw));
     if (off <= 12 && (!best || dist < best.dist)) best = { b, dist };
   }
   if (best) return openCard(best.b);
 
   // no mapped data on that bearing: reverse-geocode a point ~40m ahead
   toast('Looking up what you’re aiming at…', 2000);
-  const pt = project(lat, lon, state.headingSmooth, 40);
+  const pt = project(lat, lon, state.yaw, 40);
   const rev = await reverseGeocode(pt.lat, pt.lon);
   if (rev) {
     openCard({ id: 'pt', lat: pt.lat, lon: pt.lon, tags: {},
@@ -450,7 +483,7 @@ async function identifyAtHeading() {
 /* ================= background resolvers (1 request per tick) ================= */
 
 function resolverTick() {
-  if (!state.pos || state.headingSmooth == null) return;
+  if (!state.pos || state.yaw == null) return;
   const { latitude: lat, longitude: lon } = state.pos.coords;
   const mPerDegLat = 111320, mPerDegLon = 111320 * Math.cos(lat * Math.PI / 180);
   const inView = state.buildings
@@ -458,7 +491,7 @@ function resolverTick() {
       const x = (b.lon - lon) * mPerDegLon, y = (b.lat - lat) * mPerDegLat;
       const dist = Math.hypot(x, y);
       const bearing = (Math.atan2(x, y) * 180 / Math.PI + 360) % 360;
-      return { b, dist, off: Math.abs(angDiff(bearing, state.headingSmooth)) };
+      return { b, dist, off: Math.abs(angDiff(bearing, state.yaw)) };
     })
     .filter(v => v.dist >= MIN_DIST && v.dist <= MAX_DIST && v.off <= FOV_DEG / 2 + 10)
     .sort((a, c) => a.dist - c.dist);
